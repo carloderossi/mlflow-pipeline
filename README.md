@@ -54,7 +54,63 @@ This repository demonstrates a complete, automated MLOps ecosystem using **MLflo
      --current data/production_logs.csv
    ```
 
-Created as a demonstration of Production ML Systems Management.
+## 📊 Inspecting Experiments with MLflow UI
+
+Launch the tracking UI locally to explore runs, metrics, parameters, artifacts, and the model registry:
+
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+
+Then visit [http://localhost:5000](http://localhost:5000) in your browser.
+
+![MLflow UI](MLFLOWUI.jpg)
+
+### 🔒 Storage Architecture
+
+In a production MLOps setup, MLflow separates tracking data into two stores. Understanding the difference between them is a core **Operating Production ML Systems** skill.
+
+#### 1. Backend Store (`mlflow.db`)
+
+This is the database that holds metadata about every run.
+
+- **Default behavior:** Running `uv run src/train.py` without a tracking server creates a local SQLite file called `mlflow.db` in the project root.
+- **What it stores:**
+  - Run names, start/end times
+  - Metrics (accuracy, loss, etc.)
+  - Parameters
+  - Model Registry entries (including which version is tagged `Production`)
+- **Logs you might see:** "Updating database tables" occurs when MLflow applies SQL migrations via Alembic to create or update tables.
+
+To move to real production, swap SQLite for a shared database such as PostgreSQL or MySQL so multiple collaborators can access the same store.
+
+#### 2. Artifact Store (`mlruns/` or `mlartifacts/`)
+
+The backend database doesn’t hold the actual model files. Those live on disk or cloud storage.
+
+- **What it stores:**
+  - Serialized model binaries (`.pkl`, `.pt`, etc.)
+  - Environment files (`conda.yaml`, `requirements.txt`)
+  - Model signature files
+- **How it links back:** Each record in `mlflow.db` has an `artifact_uri` column pointing to the folder containing these assets.
+
+In real production, replace the local folder with a cloud-backed store (S3, Azure Blob, GCS) so your inference service can fetch artifacts from anywhere.
+
+#### Why this matters for your portfolio
+
+| Store type      | Local setup               | Production replacement                     |
+|-----------------|---------------------------|--------------------------------------------|
+| Backend Store   | `mlflow.db` (SQLite)      | PostgreSQL, MySQL, etc.                    |
+| Artifact Store  | `mlruns/` folder          | S3, Azure Blob, Google Cloud Storage (GCS) |
+
+**Quick verification:**
+
+```
+mlflow.db        # SQL metadata database
+mlruns/          # Folder containing model files
+```
+
+These two pieces combine to form the backbone of any scalable MLflow deployment.
 
 ## 💡 Summary of "Production" Touches
 

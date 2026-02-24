@@ -17,7 +17,8 @@ MODEL_NAME = os.getenv("MODEL_NAME", "IrisClassifier")
 MODEL_STAGE = os.getenv("MODEL_STAGE", "Production")
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
 
-mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+import os
+mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000"))
 
 # Load the model globally at startup for low-latency inference
 # URI format: 'models:/<name>/<stage>'

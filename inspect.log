@@ -1,0 +1,31 @@
+Finding latest version of model 'IrisClassifier'...
+C:\Carlo\projects\mlflow-pipeline\src\inspect_model.py:16: FutureWarning: ``mlflow.tracking.client.MlflowClient.get_latest_versions`` is deprecated since 2.9.0. Model registry stages will be removed in a future major release. To learn more about the deprecation of model registry stages, see our migration guide here: https://mlflow.org/docs/latest/model-registry.html#migrating-from-stages
+  latest_version = client.get_latest_versions(MODEL_NAME, stages=["None"])[0].version
+Assigning alias 'Production' to version 2...
+
+=== [Registry Metadata: models:/IrisClassifier@Production] ===
+{'Aliases': ['Production'],
+ 'Creation Time': 1771937196555,
+ 'Description': None,
+ 'Run ID': '55814818f28c4cfb878c5ec4ab7797d1',
+ 'Status': 'READY',
+ 'Tags': {},
+ 'Version': 2}
+
+=== [Model File Metadata (MLmodel)] ===
+Model URI: models:/m-5be9dc05ee1541ea8281392e27ac45f7
+Model Config (artifact_path): file:C:/Carlo/projects/mlflow-pipeline/mlruns/0/models/m-5be9dc05ee1541ea8281392e27ac45f7/artifacts
+Flavors: ['python_function', 'sklearn']
+
+=== [Model Signature] ===
+INPUTS:
+[{'name': 'sepal length (cm)', 'required': True, 'type': 'double'},
+ {'name': 'sepal width (cm)', 'required': True, 'type': 'double'},
+ {'name': 'petal length (cm)', 'required': True, 'type': 'double'},
+ {'name': 'petal width (cm)', 'required': True, 'type': 'double'}]
+
+OUTPUTS:
+[{'tensor-spec': {'dtype': 'int64', 'shape': (-1,)}, 'type': 'tensor'}]
+
+=== [Loaded Model Attributes] ===
+Model Object Type: <class 'mlflow.pyfunc.PyFuncModel'>
