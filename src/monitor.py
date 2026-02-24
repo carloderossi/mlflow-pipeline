@@ -1,8 +1,9 @@
 import mlflow
 import pandas as pd
 from mlflow.tracking import MlflowClient
-from evidently.future.report import Report
-from evidently.future.datasets import Dataset
+
+# Use the STABLE imports (no .future, no .legacy)
+from evidently.report import Report
 from evidently.metric_preset import DataDriftPreset
 
 # Import your training function
@@ -21,10 +22,13 @@ def run_monitoring():
 
     # 2. Simulate Production Data (With Drift)
     current_df = reference_df.copy()
-    current_df['petal width (cm)'] = current_df['petal width (cm)'] * 5.0 
+    for col in reference_df.select_dtypes(include='number').columns:
+        current_df[col] = current_df[col] * 10.0  # Massive 10x shift
 
     # 3. Run Drift Report
-    drift_report = Report(metrics=[DataDriftPreset()])
+    # drift_report = Report(metrics=[DataDriftPreset()])
+    # Detect drift if even ONE column shifts significantly
+    drift_report = Report(metrics=[DataDriftPreset(drift_share=0.1)])
     drift_report.run(reference_data=reference_df, current_data=current_df)
     
     # 4. Check Drift Status Programmatically
