@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "production-ml-pipeline"
+version = "1.0.0"
+description = "Production-grade MLflow + GitHub Actions pipeline"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    {name = "Carlo De Rossi"}
+]
+dependencies = [
+    "mlflow>=2.10.0",
+    "scikit-learn>=1.3.0",
+    "pandas>=2.0.0",
+    "flask>=3.0.0",
+    "gunicorn>=21.2.0",
+    "evidently>=0.4.0",
+    "boto3>=1.28.0",  # Required if using AWS S3 for MLflow artifacts
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "ipykernel>=6.0.0"
+]
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']

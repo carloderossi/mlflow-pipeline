@@ -1,0 +1,18 @@
+Metadata-Version: 2.4
+Name: production-ml-pipeline
+Version: 1.0.0
+Summary: Production-grade MLflow + GitHub Actions pipeline
+Author: Carlo De Rossi
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: mlflow>=2.10.0
+Requires-Dist: scikit-learn>=1.3.0
+Requires-Dist: pandas>=2.0.0
+Requires-Dist: flask>=3.0.0
+Requires-Dist: gunicorn>=21.2.0
+Requires-Dist: evidently>=0.4.0
+Requires-Dist: boto3>=1.28.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: ipykernel>=6.0.0; extra == "dev"

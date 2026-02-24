@@ -1,0 +1,7 @@
+/.venv
+/uv.lock
+config.yaml
+data/
+logs/
+models/
+notebooks/

@@ -1,0 +1,55 @@
+name: ML Pipeline
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  train-and-register:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies
+        run: pip install mlflow sklearn pandas
+        
+      - name: Run Training
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+        run: python train.py
+
+  deploy:
+    needs: train-and-register
+    runs-on: ubuntu-latest
+    steps:
+      - name: Promote to Production
+        run: |
+          # Use MLflow CLI or Python API to transition the latest version to "Production"
+          python -c "import mlflow; client = mlflow.tracking.MlflowClient(); \
+          versions = client.get_latest_versions('IrisClassifier', stages=['None']); \
+          client.transition_model_version_stage('IrisClassifier', versions[0].version, 'Production')"
+      - name: Deploy New Model Version
+        run: |
+          # 1. Pull and Start the "Green" (New) Container
+          docker pull my-registry/iris-inference:latest
+          docker run -d --name iris-green -p 8081:8080 my-registry/iris-inference:latest
+          
+          # 2. Wait for Healthcheck
+          echo "Waiting for container to pass healthcheck..."
+          for i in {1..10}; do
+            if [ "$(docker inspect -f '{{.State.Health.Status}}' iris-green)" == "healthy" ]; then
+              echo "Green container is HEALTHY!"
+              break
+            fi
+            sleep 10
+          done
+
+          # 3. Swap Traffic (Simple version: stop blue, rename green)
+          docker stop iris-blue || true
+          docker rm iris-blue || true
+          docker rename iris-green iris-blue
