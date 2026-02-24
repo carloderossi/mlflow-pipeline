@@ -4,12 +4,23 @@ This repository demonstrates a complete, automated MLOps ecosystem using **MLflo
 
 ## 🏗️ System Architecture
 
-1. **CI/CD (GitHub Actions):** Automates training and deployment.
-2. **Experiment Tracking:** Uses MLflow to track parameters and isolate `Staging` vs `Production` runs.
-3. **Model Registry:** Serves as the "Source of Truth" for model versions.
-4. **Inference:** A Flask-based container that dynamically pulls models tagged as `Production`.
-5. **Monitoring:** Drift detection dashboards via Evidently AI.
+- **CI/CD (GitHub Actions):** Automates training and deployment.
+- **Environment:** `uv` for reproducible, high-performance dependency management.
+- **Model Registry:** Serves as the "Source of Truth" for model versions.
+- **Inference:** A Flask-based container that dynamically pulls models tagged as `Production`.
+- **Experiment Tracking:** `MLflow` for logging metrics and model signatures.
+- **Registry:** Aliasing system (`@Production`) for seamless deployments.
+- **Monitoring:** `Evidently AI` for statistical data drift detection.
+- **Self-Healing:** Automated retraining triggers when data distribution shifts.
 
+## 🚀 How it Works
+1. **Train:** `uv run src/train.py` logs the model and reference data.
+2. **Monitor:** `uv run src/monitor.py` compares live traffic to training baselines.
+3. **Retrain:** If drift is detected, the monitor automatically re-triggers the training script.
+
+## 📊 Monitoring Dashboard
+The pipeline generates a `drift_report.html` comparing feature distributions (e.g., Petal Length) to identify "Data Decay" before it impacts business logic.
+Fin
 ## 🛠️ Project Structure
 
 ```text
@@ -20,7 +31,7 @@ This repository demonstrates a complete, automated MLOps ecosystem using **MLflo
 │   └── monitor.py          # Drift detection logic
 ├── serve.py                # Production Inference API
 ├── Dockerfile              # Containerization with Healthchecks
-└── requirements.txt
+└── pyproject.toml
 ```
 
 ### Production Features
