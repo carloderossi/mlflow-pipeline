@@ -8,6 +8,20 @@ MODEL_STAGE = "Production" # Or use "1" for Version 1
 # The '@' tells MLflow to look for an Alias instead of a version number. This is more robust for production use.
 model_uri = f"models:/{MODEL_NAME}@Production"
 
+def get_latest_model_version(client, model_name):
+    versions = client.search_model_versions(f"name='{MODEL_NAME}'")
+    if not versions:
+        print(f"No versions found for model '{MODEL_NAME}'")
+        return None
+
+    # Filter for the latest version with no stage (equivalent to stage="None")
+    none_stage_versions = [v for v in versions if v.current_stage == "None"]
+
+    # Sort by version number and take the latest
+    latest_version = max(none_stage_versions, key=lambda v: int(v.version))
+
+    print("Latest version:", latest_version.version)
+
 def dump_model_info():
     client = MlflowClient()
 
