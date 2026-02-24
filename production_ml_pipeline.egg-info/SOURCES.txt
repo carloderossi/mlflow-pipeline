@@ -6,5 +6,7 @@ production_ml_pipeline.egg-info/dependency_links.txt
 production_ml_pipeline.egg-info/requires.txt
 production_ml_pipeline.egg-info/top_level.txt
 src/__init__.py
+src/inspect_model.py
 src/monitor.py
+src/predict.py
 src/train.py

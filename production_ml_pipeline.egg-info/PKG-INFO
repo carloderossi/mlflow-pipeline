@@ -10,9 +10,135 @@ Requires-Dist: scikit-learn>=1.3.0
 Requires-Dist: pandas>=2.0.0
 Requires-Dist: flask>=3.0.0
 Requires-Dist: gunicorn>=21.2.0
-Requires-Dist: evidently>=0.4.0
+Requires-Dist: evidently<0.6.0
 Requires-Dist: boto3>=1.28.0
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0.0; extra == "dev"
 Requires-Dist: black>=23.0.0; extra == "dev"
 Requires-Dist: ipykernel>=6.0.0; extra == "dev"
+
+# 🚀 Production MLOps Pipeline
+
+This repository demonstrates a complete, automated MLOps ecosystem using **MLflow**, **GitHub Actions**, and [**Evidently AI**](https://github.com/evidentlyai/evidently). It transitions a model from a training script to a governed, schema-enforced production API.
+
+## 🏗️ System Architecture
+
+1. **CI/CD (GitHub Actions):** Automates training and deployment.
+2. **Experiment Tracking:** Uses MLflow to track parameters and isolate `Staging` vs `Production` runs.
+3. **Model Registry:** Serves as the "Source of Truth" for model versions.
+4. **Inference:** A Flask-based container that dynamically pulls models tagged as `Production`.
+5. **Monitoring:** Drift detection dashboards via Evidently AI.
+
+## 🛠️ Project Structure
+
+```text
+├── .github/workflows/
+│   └── pipeline.yaml       # CI/CD automation logic
+├── src/
+│   ├── train.py            # Training + Registration with Signatures
+│   └── monitor.py          # Drift detection logic
+├── serve.py                # Production Inference API
+├── Dockerfile              # Containerization with Healthchecks
+└── requirements.txt
+```
+
+### Production Features
+
+- **Model Signatures:** Every model is logged with a JSON schema (Input/Output).  
+  If the API receives a string instead of a float, MLflow rejects the request before it hits the model.
+- **Zero-Downtime Deployment:** The CI/CD pipeline uses Docker healthchecks to ensure the new model is loaded and ready before decommissioning the old one.
+- **Environment Isolation:**  
+  * *Staging:* `mlflow.set_experiment("/iris_staging")`  
+  * *Production:* Managed via the Model Registry aliases.
+
+## 🚀 Deployment Guide
+
+1. **Local Setup**
+   ```bash
+   export MLFLOW_TRACKING_URI=http://your-server:5000
+   pip install -r requirements.txt
+   python src/train.py
+   ```
+2. **Running the Inference Service**
+   ```bash
+   docker build -t iris-service .
+   docker run -p 8080:8080 \
+     -e MLFLOW_TRACKING_URI=$MLFLOW_TRACKING_URI \
+     iris-service
+   ```
+3. **Triggering Drift Analysis**  
+   To compare production performance against training data:
+   ```bash
+   python src/monitor.py --reference data/train.csv \
+     --current data/production_logs.csv
+   ```
+
+## 📊 Inspecting Experiments with MLflow UI
+
+Launch the tracking UI locally to explore runs, metrics, parameters, artifacts, and the model registry:
+
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+
+Then visit [http://localhost:5000](http://localhost:5000) in your browser.
+
+![MLflow UI](MLFLOWUI.jpg)
+
+### 🔒 Storage Architecture
+
+In a production MLOps setup, MLflow separates tracking data into two stores. Understanding the difference between them is a core **Operating Production ML Systems** skill.
+
+#### 1. Backend Store (`mlflow.db`)
+
+This is the database that holds metadata about every run.
+
+- **Default behavior:** Running `uv run src/train.py` without a tracking server creates a local SQLite file called `mlflow.db` in the project root.
+- **What it stores:**
+  - Run names, start/end times
+  - Metrics (accuracy, loss, etc.)
+  - Parameters
+  - Model Registry entries (including which version is tagged `Production`)
+- **Logs you might see:** "Updating database tables" occurs when MLflow applies SQL migrations via Alembic to create or update tables.
+
+To move to real production, swap SQLite for a shared database such as PostgreSQL or MySQL so multiple collaborators can access the same store.
+
+#### 2. Artifact Store (`mlruns/` or `mlartifacts/`)
+
+The backend database doesn’t hold the actual model files. Those live on disk or cloud storage.
+
+- **What it stores:**
+  - Serialized model binaries (`.pkl`, `.pt`, etc.)
+  - Environment files (`conda.yaml`, `requirements.txt`)
+  - Model signature files
+- **How it links back:** Each record in `mlflow.db` has an `artifact_uri` column pointing to the folder containing these assets.
+
+In real production, replace the local folder with a cloud-backed store (S3, Azure Blob, GCS) so your inference service can fetch artifacts from anywhere.
+
+#### Why this matters for your portfolio
+
+| Store type      | Local setup               | Production replacement                     |
+|-----------------|---------------------------|--------------------------------------------|
+| Backend Store   | `mlflow.db` (SQLite)      | PostgreSQL, MySQL, etc.                    |
+| Artifact Store  | `mlruns/` folder          | S3, Azure Blob, Google Cloud Storage (GCS) |
+
+**Quick verification:**
+
+```
+mlflow.db        # SQL metadata database
+mlruns/          # Folder containing model files
+```
+
+These two pieces combine to form the backbone of any scalable MLflow deployment.
+
+## 💡 Summary of "Production" Touches
+
+1. **The Signature:** In `train.py`, use `infer_signature(X_train, model.predict(X_train))`.
+2. **The Healthcheck:** In `serve.py`, the `/health` endpoint is what the Docker engine uses to decide if the "Green" container is ready to take over from the "Blue" container.
+3. **The Environment:** By setting `MODEL_STAGE=Production` in the Dockerfile, you can ensure the service only loads models labeled `Production`.
+
+---
+
+### 🏷️ Tags
+
+`mlflow` `mlops` `model-registry` `Evidently AI` `pipelines` `monitoring`

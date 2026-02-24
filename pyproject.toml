@@ -17,8 +17,8 @@ dependencies = [
     "pandas>=2.0.0",
     "flask>=3.0.0",
     "gunicorn>=21.2.0",
-    "evidently>=0.4.0",
-    "boto3>=1.28.0",  # Required if using AWS S3 for MLflow artifacts
+    "evidently<0.6.0",
+    "boto3>=1.28.0", # Required if using AWS S3 for MLflow artifacts
 ]
 
 [project.optional-dependencies]

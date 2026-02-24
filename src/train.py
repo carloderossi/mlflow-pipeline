@@ -50,6 +50,12 @@ def train_and_register():
             registered_model_name="IrisClassifier"
         )
         print("Model registered successfully")
+        
+        # 5. Save the training data as a CSV artifact
+        # This becomes our 'Reference' for drift detection
+        X_train.to_csv("train_reference.csv", index=False)
+        mlflow.log_artifact("train_reference.csv")
+        print("Training reference data logged to MLflow.")
 
 if __name__ == "__main__":
     train_and_register()
