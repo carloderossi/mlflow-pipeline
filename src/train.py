@@ -1,4 +1,5 @@
 from unittest import result
+from xml.parsers.expat import model
 from xmlrpc import client
 
 import mlflow
@@ -12,11 +13,43 @@ from mlflow.models import infer_signature
 
 from mlflow.tracking import MlflowClient
 
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import roc_curve, auc
+import matplotlib.pyplot as plt
+import numpy as np
+import mlflow
+import os
+
+def log_multiclass_roc_curve(model, X_test, y_test):
+    classes = np.unique(y_test)
+    y_test_bin = label_binarize(y_test, classes=classes)
+    y_proba = model.predict_proba(X_test)
+
+    plt.figure()
+    for i, cls in enumerate(classes):
+        fpr, tpr, _ = roc_curve(y_test_bin[:, i], y_proba[:, i])
+        roc_auc = auc(fpr, tpr)
+        plt.plot(fpr, tpr, label=f"Class {cls} (AUC={roc_auc:.3f})")
+
+    plt.plot([0, 1], [0, 1], "k--")
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title("Multiclass ROC Curve (OvR)")
+    plt.legend(loc="lower right")
+
+    os.makedirs("plots", exist_ok=True)
+    path = "plots/multiclass_roc_curve.png"
+    plt.savefig(path)
+    plt.close()
+
+    mlflow.log_artifact(path)
+
 def add_description(result):
     client = MlflowClient()
     model_uri = result.model_uri  # e.g. "models:/IrisClassifier/2"
     name, version = model_uri.split("/")[-2:]
-    client.update_registered_model(
+
+    client.update_model_version(
         name=name,
         version=version,
         description="CDR - A RandomForestClassifier trained on the Iris dataset with schema validation."
@@ -44,7 +77,15 @@ def train_and_register():
         
         # 3. Log
         print("Logging model and metrics to MLflow...")
+        mlflow.log_metric("train_accuracy", model.score(X_train, y_train))
+        mlflow.log_metric("test_accuracy", model.score(X_test, y_test))
         mlflow.log_metric("accuracy", model.score(X_test, y_test))
+
+        from sklearn.metrics import confusion_matrix
+        import pandas as pd
+        cm = confusion_matrix(y_test, model.predict(X_test))
+        pd.DataFrame(cm).to_csv("confusion_matrix.csv", index=False)
+        mlflow.log_artifact("confusion_matrix.csv")
         
         # 4. Register to Model Registry
         # This creates a new version under the name "IrisClassifier"
@@ -78,7 +119,11 @@ def train_and_register():
         # This becomes our 'Reference' for drift detection
         X_train.to_csv("train_reference.csv", index=False)
         mlflow.log_artifact("train_reference.csv")
+        X_test.to_csv("test_reference.csv", index=False)
+        mlflow.log_artifact("test_reference.csv")
         print("Training reference data logged to MLflow.")
+
+        log_multiclass_roc_curve(model, X_test, y_test)
 
 if __name__ == "__main__":
     train_and_register()

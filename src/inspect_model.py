@@ -28,6 +28,11 @@ def dump_model_info():
     # Find the latest version
     print(f"Finding latest version of model '{MODEL_NAME}'...")
     latest_version = client.get_latest_versions(MODEL_NAME, stages=["None"])[0].version
+    print(f"Latest version found: {latest_version}")
+    try:
+        get_latest_model_version(client, MODEL_NAME)
+    except Exception as e:
+        print(f"Error retrieving latest model version: {e}")
 
     # Assign the 'Production' alias to it
     print(f"Assigning alias '{MODEL_STAGE}' to version {latest_version}...")
@@ -72,6 +77,25 @@ def dump_model_info():
     model = mlflow.pyfunc.load_model(model_uri)
     # This is useful if you want to see specific internal params
     print(f"Model Object Type: {type(model)}")
+
+    # --- E. RUN INFO ---
+    run_id = model_info.run_id
+    run = mlflow.get_run(run_id)
+    print("\n=== [Run Info] ===")
+    pprint.pprint({ 
+        "Run ID": run.info.run_id,
+        "Experiment ID": run.info.experiment_id,
+        "Status": run.info.status,
+        "Start Time": run.info.start_time,
+        "End Time": run.info.end_time,
+        "Metrics": run.data.metrics,
+        "Params": run.data.params,
+        "Tags": run.data.tags,
+        "Data": run.data,
+        
+    })
+
+
 
 if __name__ == "__main__":
     dump_model_info()

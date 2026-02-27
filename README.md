@@ -75,7 +75,8 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db
 
 Then visit [http://localhost:5000](http://localhost:5000) in your browser.
 
-![MLflow UI](MLFLOWUI.jpg)
+![MLflow UI](MLFlowUI.jpg)
+![MLflow UI RoC](MLFlowUI_RoC.jpg)
 
 ### 🔒 Storage Architecture
 
